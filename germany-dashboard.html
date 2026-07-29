@@ -1,0 +1,689 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DE SME Fintech Dashboard — Business Account + Credit</title>
+<style>
+  :root{
+    color-scheme: dark;
+    --page:           #000000;
+    --surface-1:      #17171a;
+    --card:           #131315;
+    --card-2:         #1a1a1d;
+    --text-primary:   #ffffff;
+    --text-secondary: #c7c6c0;
+    --text-muted:     #8d8c86;
+    --gridline:       #2c2c2e;
+    --baseline:       #3a3a3d;
+    --border:         rgba(255,255,255,0.10);
+    --success:        #0ca30c;
+
+    --s1: #3987e5; /* blue */
+    --s2: #d95926; /* orange */
+    --s3: #199e70; /* aqua */
+    --s4: #c98500; /* yellow */
+    --s5: #d55181; /* magenta */
+    --s6: #008300; /* green */
+    --s7: #9085e9; /* violet */
+    --s8: #e66767; /* red */
+
+    --seq-250:#5ea0e9; --seq-350:#4a90e2; --seq-450:#3987e5; --seq-550:#2a6dc4;
+
+    --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#d03b3b;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--page); color:var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    line-height:1.5;
+  }
+  .wrap{max-width:1220px; margin:0 auto; padding:32px 24px 90px;}
+
+  header.hero{
+    padding:36px 32px; border-radius:16px; background:var(--card);
+    border:1px solid var(--border); margin-bottom:20px;
+  }
+  .eyebrow{ text-transform:uppercase; letter-spacing:.08em; font-size:12px; font-weight:600; color:var(--s1); }
+  h1{ font-size:32px; margin:8px 0 8px; letter-spacing:-0.01em; }
+  .hero p{ color:var(--text-secondary); max-width:780px; margin:0; font-size:15px;}
+  .hero-meta{ margin-top:18px; display:flex; gap:18px; flex-wrap:wrap; font-size:13px; color:var(--text-muted);}
+  .hero-meta span b{color:var(--text-secondary); font-weight:600;}
+
+  .refresh-bar{
+    display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    padding:12px 20px; border-radius:12px; background:var(--card-2); border:1px solid var(--border);
+    margin-bottom:28px; font-size:12.5px; color:var(--text-secondary);
+  }
+  .refresh-bar .dot{ width:8px; height:8px; border-radius:50%; background:var(--good); display:inline-block; margin-right:8px; box-shadow:0 0 0 3px rgba(12,163,12,0.15); }
+  .refresh-bar b{ color:var(--text-primary); }
+
+  nav.toc{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:36px; }
+  nav.toc a{
+    font-size:13px; padding:7px 12px; border-radius:999px; border:1px solid var(--border);
+    color:var(--text-secondary); text-decoration:none; background:var(--card);
+  }
+  nav.toc a:hover{ border-color:var(--s1); color:var(--s1); }
+
+  section{ margin-bottom:44px; scroll-margin-top:16px; }
+  .section-head{ display:flex; align-items:baseline; gap:10px; margin-bottom:4px; }
+  .section-num{ font-size:13px; color:var(--text-muted); font-variant-numeric:tabular-nums; }
+  h2{ font-size:21px; margin:0; }
+  .section-sub{ color:var(--text-secondary); font-size:14px; margin:6px 0 20px; max-width:780px; }
+
+  .grid{ display:grid; gap:16px; }
+  .grid-4{ grid-template-columns:repeat(4,1fr); }
+  .grid-3{ grid-template-columns:repeat(3,1fr); }
+  .grid-2{ grid-template-columns:repeat(2,1fr); }
+  @media (max-width:900px){ .grid-4{grid-template-columns:repeat(2,1fr);} .grid-3{grid-template-columns:repeat(2,1fr);} .grid-2{grid-template-columns:1fr;} }
+  @media (max-width:560px){ .grid-4{grid-template-columns:1fr;} }
+
+  .card{ background:var(--card); border:1px solid var(--border); border-radius:12px; padding:18px 20px; }
+
+  .stat .label{ font-size:12.5px; color:var(--text-secondary); margin-bottom:8px; }
+  .stat .value{ font-size:26px; font-weight:600; letter-spacing:-0.01em; }
+  .stat .delta{ font-size:12.5px; margin-top:6px; color:var(--text-muted); }
+  .stat .delta.good{ color:var(--success); }
+  .stat .delta.warn{ color:var(--warning); }
+
+  .barchart .row{ display:grid; grid-template-columns:190px 1fr 60px; align-items:center; gap:10px; margin:10px 0; }
+  .barchart .row .rlabel{ font-size:13px; color:var(--text-secondary); text-align:right; }
+  .barchart .track{ height:20px; background:var(--surface-1); border:1px solid var(--gridline); border-radius:4px; position:relative; }
+  .barchart .fill{ height:18px; margin-top:0; border-radius:0 4px 4px 0; }
+  .barchart .rval{ font-size:12.5px; color:var(--text-secondary); font-variant-numeric:tabular-nums; }
+  .barchart .caption{ font-size:12px; color:var(--text-muted); margin-top:12px; }
+
+  .legend{ display:flex; flex-wrap:wrap; gap:14px; margin:0 0 14px; font-size:12.5px; color:var(--text-secondary); }
+  .legend .item{ display:flex; align-items:center; gap:6px; }
+  .legend .swatch{ width:10px; height:10px; border-radius:3px; display:inline-block; }
+
+  table{ width:100%; border-collapse:collapse; font-size:13px; }
+  thead th{ text-align:left; font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--text-muted); font-weight:600; padding:8px 10px; border-bottom:1px solid var(--gridline); white-space:nowrap; }
+  tbody td{ padding:10px 10px; border-bottom:1px solid var(--gridline); color:var(--text-secondary); vertical-align:top; }
+  tbody tr:last-child td{ border-bottom:none; }
+  tbody td:first-child{ color:var(--text-primary); font-weight:600; white-space:nowrap; }
+  tbody tr.self td:first-child{ color:var(--s1); }
+  .table-wrap{ overflow-x:auto; }
+
+  .persona{ display:flex; flex-direction:column; gap:10px; }
+  .persona .tag{ font-size:11.5px; color:var(--s1); font-weight:600; text-transform:uppercase; letter-spacing:.04em; }
+  .persona h3{ margin:0; font-size:16px; }
+  .persona .share{ font-size:22px; font-weight:600; }
+  .persona ul{ margin:4px 0 0; padding-left:18px; font-size:13px; color:var(--text-secondary); }
+  .persona li{ margin-bottom:4px; }
+
+  .quote{ font-size:14px; color:var(--text-secondary); font-style:italic; border-left:2px solid var(--s1); padding-left:14px; margin:0; }
+
+  .factor-card h4{ margin:0 0 6px; font-size:14.5px; }
+  .factor-card p{ margin:0; font-size:13px; color:var(--text-secondary); }
+
+  ol.reco{ margin:0; padding-left:20px; font-size:14px; color:var(--text-secondary); }
+  ol.reco li{ margin-bottom:10px; }
+  ol.reco b{ color:var(--text-primary); }
+
+  .sources{ font-size:12px; color:var(--text-muted); }
+  .sources a{ color:var(--text-muted); }
+  .sources ul{ columns:2; -webkit-columns:2; padding-left:18px; }
+  @media (max-width:700px){ .sources ul{ columns:1; } }
+
+  footer{ margin-top:50px; padding-top:20px; border-top:1px solid var(--border); font-size:12px; color:var(--text-muted); }
+
+  /* scatter map */
+  .scatter-wrap{ position:relative; width:100%; height:360px; border:1px solid var(--gridline); border-radius:8px; background:
+      linear-gradient(var(--gridline) 1px, transparent 1px) 0 50% / 100% 1px no-repeat,
+      linear-gradient(90deg, var(--gridline) 1px, transparent 1px) 50% 0 / 1px 100% no-repeat;
+  }
+  .scatter-axis-label{ position:absolute; font-size:11px; color:var(--text-muted); }
+  .dot{ position:absolute; width:12px; height:12px; margin:-6px 0 0 -6px; border-radius:50%; background:var(--s1); border:2px solid var(--surface-1); }
+  .dot.self{ background:var(--s2); width:14px; height:14px; margin:-7px 0 0 -7px; }
+  .dot-label{ position:absolute; font-size:12px; color:var(--text-primary); white-space:nowrap; font-weight:600; }
+  .dot-label small{ font-weight:400; color:var(--text-muted); }
+
+  /* meter / gauge */
+  .meter-row{ display:flex; align-items:center; gap:16px; margin:14px 0; }
+  .meter-label{ width:210px; font-size:13px; color:var(--text-secondary); flex-shrink:0; }
+  .meter-track{ flex:1; height:22px; background:var(--surface-1); border:1px solid var(--gridline); border-radius:6px; overflow:hidden; }
+  .meter-fill{ height:100%; border-radius:6px 0 0 6px; }
+  .meter-val{ width:120px; font-size:13px; color:var(--text-secondary); font-variant-numeric:tabular-nums; flex-shrink:0; }
+  .status-icon{ display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; }
+
+  /* line/trend chart */
+  .trend-wrap{ position:relative; }
+  .trend-caption{ font-size:12px; color:var(--text-muted); margin-top:10px; }
+
+  /* funnel */
+  .funnel{ display:flex; flex-direction:column; align-items:center; gap:6px; padding:10px 0; }
+  .funnel-row{ display:flex; align-items:center; width:100%; gap:14px; }
+  .funnel-bar-wrap{ flex:1; display:flex; justify-content:center; }
+  .funnel-bar{ height:38px; border-radius:6px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:13px; font-weight:600; }
+  .funnel-meta{ width:230px; font-size:12.5px; color:var(--text-secondary); flex-shrink:0; text-align:right; }
+  .funnel-meta b{ color:var(--text-primary); }
+  .funnel-arrow{ font-size:11px; color:var(--text-muted); text-align:center; margin:2px 0; }
+
+  /* segment composition stacked bar */
+  .stack-bar{ display:flex; width:100%; height:34px; border-radius:6px; overflow:hidden; border:1px solid var(--gridline); }
+  .stack-seg{ height:100%; display:flex; align-items:center; justify-content:center; font-size:11.5px; color:#fff; font-weight:600; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="eyebrow">Market &amp; Customer Research Dashboard — Deutschland</div>
+    <h1>Selling a Business Account + Financing to German SMEs</h1>
+    <p>A living research dashboard for a challenger business-banking platform positioned like <b>Tide</b>, focused on
+    the German (DACH-adjacent, Germany-only for now) SME market — combining a business current account (Geschäftskonto)
+    with embedded credit and financing (KfW-linked loans, invoice finance, credit lines). Covers market trends, the
+    German competitive set, buyer segments, purchasing factors, buying psychology, financing/credit conditions, and —
+    new this update — the specific factors that drive <b>dual interest in both an account and financing at once</b>.</p>
+    <div class="hero-meta">
+      <span>Geography focus: <b>Germany (SME / Mittelstand)</b></span>
+      <span>Primary comparator: <b>Tide Business (DE)</b></span>
+      <span>Theme: <b>Fixed dark</b></span>
+    </div>
+  </header>
+
+  <div class="refresh-bar">
+    <div><span class="dot"></span>Last refreshed: <b>29 Jul 2026</b> · Auto-refresh: <b>daily</b> via scheduled research pass</div>
+    <div>Next scheduled refresh: <b>~06:00 UTC daily</b> — figures, deltas and the "last refreshed" date update automatically</div>
+  </div>
+
+  <nav class="toc">
+    <a href="#market">Market Snapshot</a>
+    <a href="#trends">Recent Trends</a>
+    <a href="#competitors">Competitor Analysis</a>
+    <a href="#segments">Target Group Analysis</a>
+    <a href="#factors">Purchasing Factors</a>
+    <a href="#mentality">Buying Mentality</a>
+    <a href="#credit">Financing &amp; Credit Conditions</a>
+    <a href="#dualintent">Dual-Intent: Account + Financing</a>
+    <a href="#implications">Strategic Implications</a>
+    <a href="#sources">Sources</a>
+  </nav>
+
+  <!-- MARKET SNAPSHOT -->
+  <section id="market">
+    <div class="section-head"><span class="section-num">01</span><h2>Market snapshot — Germany</h2></div>
+    <p class="section-sub">The scale of the German SME banking opportunity and how fast neobanks are taking share.</p>
+    <div class="grid grid-4">
+      <div class="card stat">
+        <div class="label">German SMEs (of total enterprises)</div>
+        <div class="value">3.52M</div>
+        <div class="delta">99.2–99.5% of all German companies</div>
+      </div>
+      <div class="card stat">
+        <div class="label">Registered freelancers (Freiberufler)</div>
+        <div class="value">1.6M+</div>
+        <div class="delta good">Still climbing (Destatis, 2025)</div>
+      </div>
+      <div class="card stat">
+        <div class="label">Germany neobanking market size, 2026</div>
+        <div class="value">$0.97tn</div>
+        <div class="delta good">→ $1.91tn by 2031 (14.4% CAGR)</div>
+      </div>
+      <div class="card stat">
+        <div class="label">Business accounts' share of DE neobank revenue</div>
+        <div class="value">66.6%</div>
+        <div class="delta">2025 — SME banking, not consumer, is the growth engine</div>
+      </div>
+      <div class="card stat">
+        <div class="label">SME contribution to national turnover</div>
+        <div class="value">28.6%</div>
+        <div class="delta">SMEs employ 21.8M people — 54.4% of workforce</div>
+      </div>
+      <div class="card stat">
+        <div class="label">Digital payments usage</div>
+        <div class="value">68%</div>
+        <div class="delta">Germans using digital payments regularly, up from 65% (2020)</div>
+      </div>
+      <div class="card stat">
+        <div class="label">SMEs using open banking for cash-flow</div>
+        <div class="value">35%</div>
+        <div class="delta good">Up from 27% a year earlier</div>
+      </div>
+      <div class="card stat">
+        <div class="label">Revolut Business DE customer growth</div>
+        <div class="value">~3.0M</div>
+        <div class="delta good">+~20% YoY — fintechs actively taking German share</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TREND LINE CHART -->
+  <section>
+    <div class="card trend-wrap">
+      <h4 style="margin:0 0 4px;">Germany neobanking market size, 2024–2031</h4>
+      <p style="font-size:12.5px;color:var(--text-secondary); margin:0 0 14px;">Projected market value (USD, trillions) — single series, no comparison axis.</p>
+      <svg viewBox="0 0 760 220" width="100%" height="220" preserveAspectRatio="xMidYMid meet">
+        <line x1="40" y1="180" x2="740" y2="180" stroke="var(--baseline)" stroke-width="1"/>
+        <line x1="40" y1="20" x2="40" y2="180" stroke="var(--baseline)" stroke-width="1"/>
+        <g stroke="var(--gridline)" stroke-width="1">
+          <line x1="40" y1="140" x2="740" y2="140"/>
+          <line x1="40" y1="100" x2="740" y2="100"/>
+          <line x1="40" y1="60" x2="740" y2="60"/>
+          <line x1="40" y1="20" x2="740" y2="20"/>
+        </g>
+        <text x="30" y="184" text-anchor="end" font-size="11" fill="var(--text-muted)">0</text>
+        <text x="30" y="144" text-anchor="end" font-size="11" fill="var(--text-muted)">0.5tn</text>
+        <text x="30" y="104" text-anchor="end" font-size="11" fill="var(--text-muted)">1.0tn</text>
+        <text x="30" y="64" text-anchor="end" font-size="11" fill="var(--text-muted)">1.5tn</text>
+        <text x="30" y="24" text-anchor="end" font-size="11" fill="var(--text-muted)">2.0tn</text>
+        <polyline fill="none" stroke="var(--s1)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"
+          points="40,170 140,155 240,138 340,116 440,92 540,66 640,42 740,20" />
+        <g fill="var(--s1)">
+          <circle cx="40" cy="170" r="4"/><circle cx="140" cy="155" r="4"/><circle cx="240" cy="138" r="4"/>
+          <circle cx="340" cy="116" r="4"/><circle cx="440" cy="92" r="4"/><circle cx="540" cy="66" r="4"/>
+          <circle cx="640" cy="42" r="4"/><circle cx="740" cy="20" r="4"/>
+        </g>
+        <text x="740" y="12" text-anchor="end" font-size="12" font-weight="600" fill="var(--text-primary)">$1.91tn</text>
+        <g fill="var(--text-muted)" font-size="11">
+          <text x="40" y="200" text-anchor="middle">2024</text>
+          <text x="140" y="200" text-anchor="middle">2025</text>
+          <text x="240" y="200" text-anchor="middle">2026</text>
+          <text x="340" y="200" text-anchor="middle">2027</text>
+          <text x="440" y="200" text-anchor="middle">2028</text>
+          <text x="540" y="200" text-anchor="middle">2029</text>
+          <text x="640" y="200" text-anchor="middle">2030</text>
+          <text x="740" y="200" text-anchor="middle">2031</text>
+        </g>
+      </svg>
+      <div class="trend-caption">Interpolated between disclosed 2026 ($0.97tn) and 2031 ($1.91tn) figures at the stated 14.41% CAGR — intermediate years are modeled, not independently sourced.</div>
+    </div>
+  </section>
+
+  <!-- RECENT TRENDS -->
+  <section id="trends">
+    <div class="section-head"><span class="section-num">02</span><h2>Recent trends shaping the German market</h2></div>
+    <p class="section-sub">What's specifically different about Germany versus the wider European picture.</p>
+    <div class="grid grid-3">
+      <div class="card factor-card">
+        <h4>Consolidation among challengers accelerating</h4>
+        <p>Trade Republic (5M DE customers) is launching a current account; Revolut Business grew ~20% to ~3M German
+        customers. Scale players are converging on full-service banking rather than staying single-product.</p>
+      </div>
+      <div class="card factor-card">
+        <h4>Embedded lending marketplaces are now table stakes</h4>
+        <p>Qonto launched a financing platform with Banxware giving German SME customers direct access to third-party
+        financing offers inside the account — the same open-marketplace model Tide runs in the UK.</p>
+      </div>
+      <div class="card factor-card">
+        <h4>DATEV integration is a German-specific must-have</h4>
+        <p>German accountants and tax advisors standardise on DATEV. A business account without native DATEV export
+        is a hard disqualifier for many SMEs and virtually all Steuerberater-advised businesses.</p>
+      </div>
+      <div class="card factor-card">
+        <h4>Privacy sensitivity is structurally higher than UK/US</h4>
+        <p>82% of German consumers are wary of sharing financial data with non-bank providers (Mastercard study) —
+        open banking-based underwriting has to be sold on control and transparency, not just convenience.</p>
+      </div>
+      <div class="card factor-card">
+        <h4>Credit conditions have tightened sharply</h4>
+        <p>40.5% of SMEs applying for loans in Q2 2026 reported restrictive bank lending practices — a record high —
+        even as KfW raises founder funding limits to counteract the squeeze.</p>
+      </div>
+      <div class="card factor-card">
+        <h4>Fintech accounts are the fastest-growing segment for freelancers</h4>
+        <p>Per the 2026 Bundesverband deutscher Banken survey, fintech business accounts are growing faster among
+        sole traders and Freiberufler than any other provider category.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPETITOR ANALYSIS -->
+  <section id="competitors">
+    <div class="section-head"><span class="section-num">03</span><h2>Competitor analysis — Germany</h2></div>
+    <p class="section-sub">The core set competing for the German SME account and its attached financing wallet.</p>
+
+    <div class="card" style="margin-bottom:16px;">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Provider</th><th>Type / infrastructure</th><th>Account pricing</th><th>Financing / credit offer</th><th>German-market fit</th><th>Standout angle</th></tr>
+          </thead>
+          <tbody>
+            <tr class="self"><td>Tide (DE)</td><td>E-money, EU passporting</td><td>Free + paid tiers</td><td>Open-banking-based loan marketplace, invoice finance</td><td>Growing German rollout; UK-proven financing model</td><td>Financing marketplace embedded in the account</td></tr>
+            <tr><td>Qonto</td><td>French e-money licence, EU passport</td><td>Free Starter + paid tiers</td><td>Financing platform via Banxware partnership</td><td>German IBAN, strong DATEV integration</td><td>Broadest SME feature set + financing marketplace</td></tr>
+            <tr><td>Finom</td><td>E-money via Solaris SE (DE)</td><td>Free + paid tiers</td><td>Integrated invoicing-linked financing options</td><td>German IBAN via Solaris, freelancer-friendly</td><td>Automation for solo/micro businesses</td></tr>
+            <tr><td>N26 Business</td><td>Full German banking licence (N26 GmbH)</td><td>Free + paid tiers</td><td>Limited direct SME lending</td><td>Native German brand, strong trust</td><td>Consumer-grade UX with a banking licence</td></tr>
+            <tr><td>Kontist</td><td>E-money, freelancer-focused</td><td>Free + paid tiers</td><td>Minimal; tax-automation led, not credit-led</td><td>Deep freelancer tax automation (VAT/ESt)</td><td>Tax-first, not financing-first</td></tr>
+            <tr><td>Vivid Money</td><td>E-money, Lithuanian licence, EU passport</td><td>Free + paid tiers</td><td>Limited direct lending; savings/investment led</td><td>German IBAN, multilingual</td><td>Banking + investing hybrid</td></tr>
+            <tr><td>Revolut Business</td><td>UK banking licence; EU e-money for DE</td><td>Free–Enterprise tiers</td><td>Growing credit line features</td><td>~3M DE customers, multi-currency depth</td><td>FX and international payments</td></tr>
+            <tr><td>Sparkassen / Volksbanken / Deutsche Bank / Commerzbank</td><td>Full German banks</td><td>Often fee-based</td><td>Deepest lending relationships, KfW pass-through as standard</td><td>Default choice outside major cities; multi-generational trust</td><td>Local relationship banking, KfW-loan gateway</td></tr>
+            <tr><td>Trade Republic</td><td>Full German banking licence</td><td>Low-fee, consumer-first</td><td>Not yet a business-lending player</td><td>5M DE customers, launching current accounts</td><td>Scale entrant to watch, not yet SME-built</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="legend">
+        <span class="item"><span class="swatch" style="background:var(--s1);"></span>Challenger / fintech platforms</span>
+        <span class="item"><span class="swatch" style="background:var(--s2);"></span>Tide (DE) — reference position</span>
+      </div>
+      <div class="scatter-wrap" id="scatter">
+        <span class="scatter-axis-label" style="bottom:6px; right:10px;">More feature depth / embedded finance →</span>
+        <span class="scatter-axis-label" style="top:6px; left:10px; writing-mode:vertical-rl;">↑ Perceived trust / balance-sheet strength</span>
+      </div>
+      <div class="barchart caption">Illustrative positioning synthesised from licence type, disclosed lending scope and DE-market product breadth — directional, not a fielded perceptual study.</div>
+    </div>
+  </section>
+
+  <!-- TARGET GROUP ANALYSIS -->
+  <section id="segments">
+    <div class="section-head"><span class="section-num">04</span><h2>Target group analysis — Germany</h2></div>
+    <p class="section-sub">Who the German SME buyer is, by company size, and the personas that matter for an
+      account-plus-financing proposition.</p>
+
+    <div class="card" style="margin-bottom:16px;">
+      <h4 style="margin-top:0;">German enterprise landscape by size (share of ~3.52M SMEs + freelancers)</h4>
+      <div class="stack-bar">
+        <div class="stack-seg" style="width:35%; background:var(--s1);">Freelancers 1.6M</div>
+        <div class="stack-seg" style="width:41%; background:var(--s2);">Micro/small 429K</div>
+        <div class="stack-seg" style="width:8%; background:var(--s3);">Mittelstand 84.7K</div>
+        <div class="stack-seg" style="width:2%; background:var(--s7);"></div>
+      </div>
+      <div class="legend" style="margin-top:12px;">
+        <span class="item"><span class="swatch" style="background:var(--s1);"></span>Freelancers / Freiberufler — 1.6M+</span>
+        <span class="item"><span class="swatch" style="background:var(--s2);"></span>Micro &amp; small businesses — ~429K</span>
+        <span class="item"><span class="swatch" style="background:var(--s3);"></span>Mittelstand (50–249 employees) — ~84.7K</span>
+        <span class="item"><span class="swatch" style="background:var(--s7);"></span>Mid-caps &amp; large (250+) — ~35K</span>
+      </div>
+      <div class="barchart caption">Widths are proportional within the combined freelancer + registered-SME population; segment sizes are independently sourced counts, not percentages of one common base.</div>
+    </div>
+
+    <div class="grid grid-3">
+      <div class="card persona">
+        <span class="tag">Persona A</span>
+        <h3>The Freiberufler / solo founder</h3>
+        <div class="share">Freelancer, no employees</div>
+        <ul>
+          <li>Wants: fast German IBAN setup, simple VAT/USt handling, low fees</li>
+          <li>Credit need: short-term cash-flow buffer, rarely growth capital</li>
+          <li>Decision style: price- and review-driven, self-serve, fintech-open</li>
+        </ul>
+      </div>
+      <div class="card persona">
+        <span class="tag">Persona B</span>
+        <h3>The scaling GmbH</h3>
+        <div class="share">Micro/small business, 2–50 employees</div>
+        <ul>
+          <li>Wants: DATEV export, multi-user access, Steuerberater-friendly reporting</li>
+          <li>Credit need: working capital, equipment/asset finance, KfW-linked loans</li>
+          <li>Decision style: compares 2–3 providers; weighs trust and DATEV support heavily</li>
+        </ul>
+      </div>
+      <div class="card persona">
+        <span class="tag">Persona C</span>
+        <h3>The export-oriented Mittelstand firm</h3>
+        <div class="share">50–249 employees, often manufacturing</div>
+        <ul>
+          <li>Wants: multi-currency, established banking relationship, credibility with partners</li>
+          <li>Credit need: larger-ticket growth/export finance, often already has a Sparkasse relationship</li>
+          <li>Decision style: relationship-led; slow to switch primary bank, faster to add a secondary fintech account</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- PURCHASING FACTORS -->
+  <section id="factors">
+    <div class="section-head"><span class="section-num">05</span><h2>Purchasing factors — Germany</h2></div>
+    <p class="section-sub">What moves a German SME to open, or switch, a Geschäftskonto — ranked by relative influence.</p>
+    <div class="card">
+      <div class="barchart">
+        <div class="row"><div class="rlabel">German IBAN &amp; SEPA fit</div><div class="track"><div class="fill" style="width:92%; background:var(--s1);"></div></div><div class="rval">Near-mandatory</div></div>
+        <div class="row"><div class="rlabel">Fees &amp; pricing transparency</div><div class="track"><div class="fill" style="width:88%; background:var(--s1);"></div></div><div class="rval">Core driver of fintech switching</div></div>
+        <div class="row"><div class="rlabel">Data privacy &amp; trust</div><div class="track"><div class="fill" style="width:85%; background:var(--s1);"></div></div><div class="rval">82% wary of non-bank data sharing</div></div>
+        <div class="row"><div class="rlabel">DATEV / accounting integration</div><div class="track"><div class="fill" style="width:78%; background:var(--s1);"></div></div><div class="rval">Steuerberater-driven requirement</div></div>
+        <div class="row"><div class="rlabel">Speed of account opening</div><div class="track"><div class="fill" style="width:70%; background:var(--s1);"></div></div><div class="rval">Fintech's core structural advantage</div></div>
+        <div class="row"><div class="rlabel">Access to credit / financing</div><div class="track"><div class="fill" style="width:68%; background:var(--s1);"></div></div><div class="rval">Rising with tightening bank lending</div></div>
+        <div class="row"><div class="rlabel">Human / local relationship support</div><div class="track"><div class="fill" style="width:60%; background:var(--s1);"></div></div><div class="rval">Still decisive outside major cities</div></div>
+        <div class="row"><div class="rlabel">Multi-currency / export tools</div><div class="track"><div class="fill" style="width:48%; background:var(--s1);"></div></div><div class="rval">Concentrated in exporting Mittelstand</div></div>
+      </div>
+      <div class="caption">Bars show relative influence (illustrative index synthesised from DE provider-comparison guides, Bundesverband survey commentary, and payments/privacy studies). Right-hand annotations are the underlying data points.</div>
+    </div>
+  </section>
+
+  <!-- BUYING MENTALITY -->
+  <section id="mentality">
+    <div class="section-head"><span class="section-num">06</span><h2>Buying mentality &amp; psychology — Germany</h2></div>
+    <p class="section-sub">German SME buying behaviour has a distinct cultural profile versus the UK/US: higher debt-aversion,
+      higher institutional trust in local banks, and a structurally higher bar for data-sharing trust.</p>
+    <div class="grid grid-2">
+      <div class="card">
+        <h4 style="margin-top:0;">Debt carries more cultural weight in Germany</h4>
+        <p style="font-size:13.5px; color:var(--text-secondary);">The German word for debt, <i>Schuld</i>, also means
+        "guilt" — and that linguistic overlap tracks real behaviour: German SMEs are more debt-averse than UK/US peers,
+        prefer retained-earnings financing where possible, and are more sensitive to how a credit offer is framed.
+        Financing pitched as "flexible working capital" lands better than anything resembling a loan hard-sell.</p>
+      </div>
+      <div class="card">
+        <h4 style="margin-top:0;">Sparkassen loyalty is a structural trust benchmark</h4>
+        <p style="font-size:13.5px; color:var(--text-secondary);">Decades-long relationships with local Sparkassen/
+        Volksbanken remain the default, especially outside Berlin/Munich. Fintechs aren't competing to replace this
+        relationship outright — the realistic win is becoming the fast, low-friction <i>second</i> account, with
+        financing as the wedge that earns primary-relationship status over time.</p>
+      </div>
+      <div class="card">
+        <h4 style="margin-top:0;">KfW-backed financing is seen as legitimate; unknown fintech credit is not (yet)</h4>
+        <p style="font-size:13.5px; color:var(--text-secondary);">Because KfW (state development bank) financing is
+        routed through a business's own bank, a loan with the KfW name attached carries automatic institutional
+        trust. A platform that can visibly pass through or reference KfW-backed schemes inherits some of that
+        legitimacy — a materially different psychology from an unbranded "get a loan" fintech pitch.</p>
+      </div>
+      <div class="card">
+        <h4 style="margin-top:0;">Privacy is a precondition, not a preference</h4>
+        <p style="font-size:13.5px; color:var(--text-secondary);">With 82% of German consumers wary of sharing
+        financial data with non-banks, open-banking-based pre-qualification has to be opt-in, clearly explained, and
+        reversible — presented as convenience under the SME's control, never as a default data-sharing arrangement.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINANCING / CREDIT CONDITIONS -->
+  <section id="credit">
+    <div class="section-head"><span class="section-num">07</span><h2>Financing &amp; credit conditions — Germany</h2></div>
+    <p class="section-sub">The lending backdrop German SMEs are operating in right now — this is the single biggest
+      tailwind for an account-plus-credit proposition.</p>
+
+    <div class="card" style="margin-bottom:16px;">
+      <h4 style="margin-top:0;">Credit-access strain (KfW Research, Q2 2026)</h4>
+      <div class="meter-row">
+        <div class="meter-label">SMEs reporting restrictive bank lending</div>
+        <div class="meter-track"><div class="meter-fill" style="width:40.5%; background:var(--critical);"></div></div>
+        <div class="meter-val"><span class="status-icon" style="background:var(--critical);"></span>40.5% · record high</div>
+      </div>
+      <div class="meter-row">
+        <div class="meter-label">Manufacturers citing loan constraints</div>
+        <div class="meter-track"><div class="meter-fill" style="width:40.8%; background:var(--serious);"></div></div>
+        <div class="meter-val"><span class="status-icon" style="background:var(--serious);"></span>40.8%</div>
+      </div>
+      <div class="meter-row">
+        <div class="meter-label">Service providers citing loan constraints</div>
+        <div class="meter-track"><div class="meter-fill" style="width:42.4%; background:var(--serious);"></div></div>
+        <div class="meter-val"><span class="status-icon" style="background:var(--serious);"></span>42.4%</div>
+      </div>
+      <div class="meter-row">
+        <div class="meter-label">SMEs currently in loan negotiations</div>
+        <div class="meter-track"><div class="meter-fill" style="width:19.3%; background:var(--warning);"></div></div>
+        <div class="meter-val"><span class="status-icon" style="background:var(--warning);"></span>19.3% · falling</div>
+      </div>
+      <div class="meter-row">
+        <div class="meter-label">KfW founder-loan ceiling (2026 update)</div>
+        <div class="meter-track"><div class="meter-fill" style="width:80%; background:var(--good);"></div></div>
+        <div class="meter-val"><span class="status-icon" style="background:var(--good);"></span>raised to €200K</div>
+      </div>
+      <div class="caption">Meters show the reported metric itself (e.g. 40.5% restrictive-lending rate), not a normalised score — track width is illustrative scaling for the two non-percentage rows.</div>
+    </div>
+
+    <div class="grid grid-2">
+      <div class="card">
+        <h4 style="margin-top:0;">Reading the conditions</h4>
+        <ul style="font-size:13.5px; color:var(--text-secondary); padding-left:18px; margin:0;">
+          <li>Restrictive bank lending hit a <b>record high (40.5%)</b> in Q2 2026 even as overall credit demand cooled —
+            businesses that do want financing are finding it harder to get from their existing bank.</li>
+          <li>KfW expects new corporate lending to gain momentum through 2026 as conditions normalise, and has
+            <b>lifted founder funding to €200,000</b> alongside expanded digitalisation grants.</li>
+          <li>The gap between "banks say no" and "KfW wants to lend more" is exactly the space an embedded,
+            open-banking-qualified financing marketplace is built to fill.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h4 style="margin-top:0;">Why bundling works commercially in Germany too</h4>
+        <p style="font-size:13.5px; color:var(--text-secondary); margin-bottom:0;">Business accounts already generate
+        <b>66.6% of German neobank revenue</b> — the account is the acquisition surface, and transaction data is the
+        underwriting signal for the higher-margin financing product layered on top, exactly as in the UK market.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- DUAL-INTENT SECTION (NEW) -->
+  <section id="dualintent">
+    <div class="section-head"><span class="section-num">08</span><h2>Dual-intent: SMEs interested in both an account and financing</h2></div>
+    <p class="section-sub">The highest-value buyer isn't shopping for an account <i>or</i> a loan — they're evaluating
+      both at once. These are the factors that put an SME into that dual-intent state, and where it converts.</p>
+
+    <div class="grid grid-2" style="margin-bottom:16px;">
+      <div class="card factor-card">
+        <h4>1. Tightening credit pushes account-shoppers to also shop for a lender</h4>
+        <p>With 40.5% of loan applicants facing restrictive bank practices, an SME unhappy with its bank's credit
+        answer is now primed to re-evaluate the whole relationship — including where it banks day-to-day. Dissatisfaction
+        with financing access is becoming a trigger for account switching, not just a separate loan search.</p>
+      </div>
+      <div class="card factor-card">
+        <h4>2. Business formation bundles the decision by default</h4>
+        <p>A Existenzgründer applying for a KfW-backed founder loan (now up to €200K) needs a business account for the
+        funds to land in <i>before</i> the loan can complete. For new businesses, account and financing aren't
+        sequential decisions — they're effectively one decision made in the same sitting.</p>
+      </div>
+      <div class="card factor-card">
+        <h4>3. Open-banking comfort predicts openness to embedded offers</h4>
+        <p>35% of SMB owners already use open banking for cash-flow monitoring, up from 27% a year earlier. That
+        cohort has already crossed the trust threshold needed to accept a pre-qualified, transaction-data-based
+        financing offer from their account provider — the natural first market for embedded credit.</p>
+      </div>
+      <div class="card factor-card">
+        <h4>4. Switching is a rare full-relationship review — earn it with transparency</h4>
+        <p>German SMEs switch banks infrequently, so when they do actively compare providers, they evaluate the whole
+        offer, financing included. But with 82% wary of non-bank data sharing, the financing cross-sell has to be
+        opt-in and clearly explained — an assumed or default data-sharing flow will cost more trust than it buys
+        conversion.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h4 style="margin-top:0;">Illustrative dual-intent funnel</h4>
+      <p style="font-size:12.5px;color:var(--text-secondary); margin:0 0 16px;">A directional planning funnel showing
+        where account-shoppers narrow into financing customers — modelled from the market signals above, not a
+        measured German cohort study. Treat the shape, not the exact numbers, as the takeaway.</p>
+      <div class="funnel">
+        <div class="funnel-row">
+          <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:100%; background:var(--seq-250);">SMEs evaluating a new business account</div></div>
+          <div class="funnel-meta"><b>100</b> index</div>
+        </div>
+        <div class="funnel-arrow">↓</div>
+        <div class="funnel-row">
+          <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:70%; background:var(--seq-350);">Also express interest in financing during evaluation</div></div>
+          <div class="funnel-meta"><b>~45</b> index — tracks ~50% external-finance usage + tightening credit</div>
+        </div>
+        <div class="funnel-arrow">↓</div>
+        <div class="funnel-row">
+          <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:45%; background:var(--seq-450);">Pre-qualify / apply for embedded financing within 90 days</div></div>
+          <div class="funnel-meta"><b>~22</b> index — open-banking-comfortable cohort</div>
+        </div>
+        <div class="funnel-arrow">↓</div>
+        <div class="funnel-row">
+          <div class="funnel-bar-wrap"><div class="funnel-bar" style="width:26%; background:var(--seq-550);">Convert to an active financing product</div></div>
+          <div class="funnel-meta"><b>~12</b> index</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STRATEGIC IMPLICATIONS -->
+  <section id="implications">
+    <div class="section-head"><span class="section-num">09</span><h2>Strategic implications for the German market</h2></div>
+    <div class="card">
+      <ol class="reco">
+        <li><b>Make DATEV export and a German IBAN non-negotiable table stakes.</b> These are hard disqualifiers, not
+          nice-to-haves — get them right before investing further in acquisition spend.</li>
+        <li><b>Sell financing as "flexible working capital," never as debt.</b> Given Germany's higher cultural
+          debt-aversion, framing and tone in the credit-offer UI matter as much as the underwriting itself.</li>
+        <li><b>Lead with KfW-linked or KfW-adjacent financing where possible.</b> Borrowed institutional legitimacy
+          closes the trust gap faster than any amount of fintech-native marketing.</li>
+        <li><b>Target the Existenzgründer moment.</b> Account and financing are one decision at formation — integrate
+          with the KfW founder-loan journey so the account isn't a separate step.</li>
+        <li><b>Make data-sharing for credit pre-qualification explicit opt-in.</b> With 82% wary of non-bank data
+          use, a transparent, reversible consent flow is a conversion requirement, not just a compliance one.</li>
+        <li><b>Position as the fast second account, not a Sparkasse replacement.</b> Win the day-to-day + financing
+          wedge first; primary-relationship status is an earned, longer-term outcome.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="sources">
+    <div class="section-head"><span class="section-num">10</span><h2>Sources</h2></div>
+    <div class="card sources">
+      <ul>
+        <li><a href="https://www.mordorintelligence.com/industry-reports/germany-neobanking-market" target="_blank" rel="noopener">Mordor Intelligence — Germany Neobanking Market</a></li>
+        <li><a href="https://www.statista.com/forecasts/1401428/brand-shares-of-key-neobanking-players-in-germany" target="_blank" rel="noopener">Statista — Brand shares of key neobanking players in Germany</a></li>
+        <li><a href="https://vivid.money/en-de/blog/best-business-accounts/" target="_blank" rel="noopener">Vivid Money — Business account comparison 2026 (Germany)</a></li>
+        <li><a href="https://mybusinessfuture.com/en/neobanks-redefining-german-banking-market/" target="_blank" rel="noopener">MyBusinessFuture — Neobanks redefining the German banking market</a></li>
+        <li><a href="https://www.banxware.com/blog/qonto-launches-financing-platform-for-smes" target="_blank" rel="noopener">Banxware — Qonto launches financing platform for German SMEs</a></li>
+        <li><a href="https://finom.co/en-de/blog/business-accounts-for-startups-smbs-in-germany/" target="_blank" rel="noopener">Finom — Top business accounts for startups &amp; SMBs in Germany</a></li>
+        <li><a href="https://www.ifm-bonn.org/en/statistics/overview-mittelstand/macro-economic-significance-of-smes/deutschland" target="_blank" rel="noopener">IfM Bonn — Macro-economic significance of SMEs in Germany</a></li>
+        <li><a href="https://www.bundeswirtschaftsministerium.de/Redaktion/EN/Publikationen/wirtschaftsmotor-mittelstand-zahlen-und-fakten-zu-den-deutschen-kmu.pdf" target="_blank" rel="noopener">BMWK — The German Mittelstand: facts and figures</a></li>
+        <li><a href="https://www.iwkoeln.de/en/studies/klaus-heiner-roehl-how-strong-is-the-large-sme-sector-in-germany.html" target="_blank" rel="noopener">German Economic Institute (IW) — How strong is the large SME sector in Germany?</a></li>
+        <li><a href="https://www.kfw.de/About-KfW/Newsroom/Latest-News/Pressemitteilungen-Details_900736.html" target="_blank" rel="noopener">KfW Research — Four in ten SMEs complain about difficult access to loans</a></li>
+        <li><a href="https://meyka.com/blog/january-07-kfw-sees-2026-sme-loan-rebound-lifts-founder-funding-to-eur-200k-0701/" target="_blank" rel="noopener">Meyka — KfW sees 2026 SME loan rebound, lifts founder funding to €200K</a></li>
+        <li><a href="https://www.marketscreener.com/news/negative-record-smes-face-increasing-difficulties-accessing-loans-ce7e58dfd189f025" target="_blank" rel="noopener">MarketScreener — SMEs face record difficulties accessing loans</a></li>
+        <li><a href="https://www.settle-in-berlin.com/how-to-become-a-freelancer-in-germany-self-employed/" target="_blank" rel="noopener">Settle in Berlin — Freelancing in Germany, 2026 guide</a></li>
+        <li><a href="https://www.yaspa.com/blog/the-state-of-open-banking-in-germany/" target="_blank" rel="noopener">Yaspa — The state of open banking in Germany</a></li>
+        <li><a href="https://noda.live/articles/open-banking-in-germany" target="_blank" rel="noopener">Noda — Open banking in Germany: overview &amp; future trends</a></li>
+        <li><a href="https://seveninsurancebrokers.com/digital-banking-statistics/" target="_blank" rel="noopener">Seven Insurance Brokers — Digital banking statistics 2026</a></li>
+        <li><a href="https://www.how-to-germany.com/bank-accounts/business/" target="_blank" rel="noopener">How to Germany — Business bank account Germany 2026</a></li>
+        <li><a href="https://norman.finance/blog/geschaeftskonto" target="_blank" rel="noopener">Norman Finance — Business bank account Germany: who needs one</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    Research synthesis for planning purposes — figures are drawn from public disclosures and third-party market
+    surveys and are refreshed on a daily schedule. Intermediate/trend-line and funnel figures are explicitly modelled
+    or illustrative where noted; validate against primary sources before use in external or investment materials.
+  </footer>
+
+</div>
+
+<script>
+  var points = [
+    {name:"Tide (DE)", sub:"reference position", x:80, y:38, self:true},
+    {name:"Qonto", sub:"financing marketplace", x:88, y:74},
+    {name:"Finom", sub:"automation-led", x:60, y:22},
+    {name:"N26 Business", sub:"full DE licence", x:48, y:82},
+    {name:"Kontist", sub:"tax-first", x:34, y:46},
+    {name:"Vivid Money", sub:"banking+investing", x:58, y:58},
+    {name:"Revolut Business", sub:"FX depth", x:76, y:56},
+    {name:"Sparkassen / Deutsche Bank / Commerzbank", sub:"full banks", x:30, y:94},
+    {name:"Trade Republic", sub:"scale entrant", x:42, y:68}
+  ];
+  var el = document.getElementById('scatter');
+  points.forEach(function(p){
+    var dot = document.createElement('div');
+    dot.className = 'dot' + (p.self ? ' self' : '');
+    dot.style.left = p.x + '%';
+    dot.style.top = (100 - p.y) + '%';
+    dot.title = p.name + ' — ' + p.sub;
+    el.appendChild(dot);
+
+    var label = document.createElement('div');
+    label.className = 'dot-label';
+    label.style.left = (p.x + 2) + '%';
+    label.style.top = (100 - p.y - 4) + '%';
+    label.innerHTML = p.name + ' <small>' + p.sub + '</small>';
+    el.appendChild(label);
+  });
+</script>
+</body>
+</html>

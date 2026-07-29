@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>B2B Fintech Research Dashboard — Business Accounts &amp; SME Credit</title>
+<style>
+  :root{
+    color-scheme: light;
+    --surface-1:      #fcfcfb;
+    --page:           #f9f9f7;
+    --card:           #ffffff;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --gridline:       #e1e0d9;
+    --baseline:       #c3c2b7;
+    --border:         rgba(11,11,11,0.10);
+    --success:        #006300;
+
+    --s1: #2a78d6; /* blue */
+    --s2: #eb6834; /* orange */
+    --s3: #1baf7a; /* aqua */
+    --s4: #eda100; /* yellow */
+    --s5: #e87ba4; /* magenta */
+    --s6: #008300; /* green */
+    --s7: #4a3aa7; /* violet */
+    --s8: #e34948; /* red */
+
+    --seq-100:#cde2fb; --seq-200:#9ec5f4; --seq-300:#6da7ec; --seq-400:#3987e5; --seq-500:#256abf; --seq-600:#184f95;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:where(:not([data-theme="light"])){
+      color-scheme: dark;
+      --surface-1: #1a1a19; --page:#0d0d0d; --card:#1f1f1e;
+      --text-primary:#ffffff; --text-secondary:#c3c2b7; --text-muted:#898781;
+      --gridline:#2c2c2a; --baseline:#383835; --border:rgba(255,255,255,0.10);
+      --success:#0ca30c;
+      --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#008300; --s7:#9085e9; --s8:#e66767;
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --surface-1: #1a1a19; --page:#0d0d0d; --card:#1f1f1e;
+    --text-primary:#ffffff; --text-secondary:#c3c2b7; --text-muted:#898781;
+    --gridline:#2c2c2a; --baseline:#383835; --border:rgba(255,255,255,0.10);
+    --success:#0ca30c;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#008300; --s7:#9085e9; --s8:#e66767;
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--page); color:var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    line-height:1.5;
+  }
+  .wrap{max-width:1180px; margin:0 auto; padding:32px 24px 80px;}
+  header.hero{
+    padding:36px 32px; border-radius:16px; background:var(--card);
+    border:1px solid var(--border); margin-bottom:28px;
+  }
+  .eyebrow{ text-transform:uppercase; letter-spacing:.08em; font-size:12px; font-weight:600; color:var(--s1); }
+  h1{ font-size:32px; margin:8px 0 8px; letter-spacing:-0.01em; }
+  .hero p{ color:var(--text-secondary); max-width:760px; margin:0; font-size:15px;}
+  .hero-meta{ margin-top:18px; display:flex; gap:18px; flex-wrap:wrap; font-size:13px; color:var(--text-muted);}
+  .hero-meta span b{color:var(--text-secondary); font-weight:600;}
+
+  nav.toc{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:36px; }
+  nav.toc a{
+    font-size:13px; padding:7px 12px; border-radius:999px; border:1px solid var(--border);
+    color:var(--text-secondary); text-decoration:none; background:var(--card);
+  }
+  nav.toc a:hover{ border-color:var(--s1); color:var(--s1); }
+
+  section{ margin-bottom:44px; scroll-margin-top:16px; }
+  .section-head{ display:flex; align-items:baseline; gap:10px; margin-bottom:4px; }
+  .section-num{ font-size:13px; color:var(--text-muted); font-variant-numeric:tabular-nums; }
+  h2{ font-size:21px; margin:0; }
+  .section-sub{ color:var(--text-secondary); font-size:14px; margin:6px 0 20px; max-width:760px; }
+
+  .grid{ display:grid; gap:16px; }
+  .grid-4{ grid-template-columns:repeat(4,1fr); }
+  .grid-3{ grid-template-columns:repeat(3,1fr); }
+  .grid-2{ grid-template-columns:repeat(2,1fr); }
+  @media (max-width:900px){ .grid-4{grid-template-columns:repeat(2,1fr);} .grid-3{grid-template-columns:repeat(2,1fr);} .grid-2{grid-template-columns:1fr;} }
+  @media (max-width:560px){ .grid-4{grid-template-columns:1fr;} }
+
+  .card{ background:var(--card); border:1px solid var(--border); border-radius:12px; padding:18px 20px; }
+
+  /* stat tiles */
+  .stat .label{ font-size:12.5px; color:var(--text-secondary); margin-bottom:8px; }
+  .stat .value{ font-size:26px; font-weight:600; letter-spacing:-0.01em; }
+  .stat .delta{ font-size:12.5px; margin-top:6px; color:var(--text-muted); }
+  .stat .delta.good{ color:var(--success); }
+
+  /* horizontal bar chart */
+  .barchart .row{ display:grid; grid-template-columns:168px 1fr 52px; align-items:center; gap:10px; margin:10px 0; }
+  .barchart .row .rlabel{ font-size:13px; color:var(--text-secondary); text-align:right; }
+  .barchart .track{ height:20px; background:var(--gridline); border-radius:4px; position:relative; }
+  .barchart .fill{ height:20px; border-radius:0 4px 4px 0; }
+  .barchart .rval{ font-size:12.5px; color:var(--text-secondary); font-variant-numeric:tabular-nums; }
+  .barchart .caption{ font-size:12px; color:var(--text-muted); margin-top:12px; }
+
+  /* legend */
+  .legend{ display:flex; flex-wrap:wrap; gap:14px; margin:0 0 14px; font-size:12.5px; color:var(--text-secondary); }
+  .legend .item{ display:flex; align-items:center; gap:6px; }
+  .legend .swatch{ width:10px; height:10px; border-radius:3px; display:inline-block; }
+
+  table{ width:100%; border-collapse:collapse; font-size:13px; }
+  thead th{ text-align:left; font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--text-muted); font-weight:600; padding:8px 10px; border-bottom:1px solid var(--gridline); white-space:nowrap; }
+  tbody td{ padding:10px 10px; border-bottom:1px solid var(--gridline); color:var(--text-secondary); vertical-align:top; }
+  tbody tr:last-child td{ border-bottom:none; }
+  tbody td:first-child{ color:var(--text-primary); font-weight:600; white-space:nowrap; }
+  .table-wrap{ overflow-x:auto; }
+  .pill{ display:inline-block; font-size:11px; padding:2px 8px; border-radius:999px; border:1px solid var(--border); color:var(--text-secondary); }
+
+  .persona{ display:flex; flex-direction:column; gap:10px; }
+  .persona .tag{ font-size:11.5px; color:var(--s1); font-weight:600; text-transform:uppercase; letter-spacing:.04em; }
+  .persona h3{ margin:0; font-size:16px; }
+  .persona .share{ font-size:22px; font-weight:600; }
+  .persona ul{ margin:4px 0 0; padding-left:18px; font-size:13px; color:var(--text-secondary); }
+  .persona li{ margin-bottom:4px; }
+
+  .quote{ font-size:14px; color:var(--text-secondary); font-style:italic; border-left:2px solid var(--s1); padding-left:14px; margin:0; }
+
+  .factor-card h4{ margin:0 0 6px; font-size:14.5px; }
+  .factor-card p{ margin:0; font-size:13px; color:var(--text-secondary); }
+
+  ol.reco{ margin:0; padding-left:20px; font-size:14px; color:var(--text-secondary); }
+  ol.reco li{ margin-bottom:10px; }
+  ol.reco b{ color:var(--text-primary); }
+
+  .sources{ font-size:12px; color:var(--text-muted); }
+  .sources a{ color:var(--text-muted); }
+  .sources ul{ columns:2; -webkit-columns:2; padding-left:18px; }
+  @media (max-width:700px){ .sources ul{ columns:1; } }
+
+  footer{ margin-top:50px; padding-top:20px; border-top:1px solid var(--border); font-size:12px; color:var(--text-muted); }
+
+  /* scatter map */
+  .scatter-wrap{ position:relative; width:100%; height:340px; border:1px solid var(--gridline); border-radius:8px; background:
+      linear-gradient(var(--gridline) 1px, transparent 1px) 0 50% / 100% 1px no-repeat,
+      linear-gradient(90deg, var(--gridline) 1px, transparent 1px) 50% 0 / 1px 100% no-repeat;
+  }
+  .scatter-axis-label{ position:absolute; font-size:11px; color:var(--text-muted); }
+  .dot{ position:absolute; width:12px; height:12px; margin:-6px 0 0 -6px; border-radius:50%; background:var(--s1); border:2px solid var(--surface-1); }
+  .dot-label{ position:absolute; font-size:12px; color:var(--text-primary); white-space:nowrap; font-weight:600; }
+  .dot-label small{ font-weight:400; color:var(--text-muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <div class="eyebrow">Market &amp; Customer Research Dashboard</div>
+    <h1>Selling a Business Account + Financing to UK SMEs</h1>
+    <p>A research synthesis for a challenger business-banking platform positioned like <b>Tide</b> — combining a
+    day-to-day business current account with embedded credit and financing products (loans, invoice finance, cards).
+    Covers market trends, the competitive set, buyer segments, purchasing factors, buying psychology around credit,
+    and strategic implications.</p>
+    <div class="hero-meta">
+      <span>Prepared: <b>29 Jul 2026</b></span>
+      <span>Geography focus: <b>United Kingdom SME market</b></span>
+      <span>Primary comparator: <b>Tide Business</b></span>
+      <span>Method: <b>Public market data, provider disclosures &amp; 2025–26 industry surveys</b></span>
+    </div>
+  </header>
+
+  <nav class="toc">
+    <a href="#trends">Recent Trends</a>
+    <a href="#market">Market Snapshot</a>
+    <a href="#competitors">Competitor Analysis</a>
+    <a href="#segments">Target Group Analysis</a>
+    <a href="#factors">Purchasing Factors</a>
+    <a href="#mentality">Buying Mentality</a>
+    <a href="#credit">Financing &amp; Credit Deep-Dive</a>
+    <a href="#implications">Strategic Implications</a>
+    <a href="#sources">Sources</a>
+  </nav>
+
+  <!-- MARKET SNAPSHOT -->
+  <section id="market">
+    <div class="section-head"><span class="section-num">01</span><h2>Market snapshot</h2></div>
+    <p class="section-sub">The UK SME banking market at a glance — the addressable base and how fast the neobank
+      segment (Tide's category) is taking share of it.</p>
+    <div class="grid grid-4">
+      <div class="card stat">
+        <div class="label">UK private-sector businesses</div>
+        <div class="value">5.7M</div>
+        <div class="delta good">+3.5% vs start of 2025</div>
+      </div>
+      <div class="card stat">
+        <div class="label">Tide UK SME members</div>
+        <div class="value">~900K</div>
+        <div class="delta">≈15% of the UK SME banking base</div>
+      </div>
+      <div class="card stat">
+        <div class="label">Gross SME bank lending, 2025</div>
+        <div class="value">£68bn</div>
+        <div class="delta good">+9% YoY — 2nd highest in 13 years</div>
+      </div>
+      <div class="card stat">
+        <div class="label">Challenger/specialist share of SME lending</div>
+        <div class="value">60%</div>
+        <div class="delta">Up from a high-street-dominated market pre-2020</div>
+      </div>
+      <div class="card stat">
+        <div class="label">SMEs using external finance</div>
+        <div class="value">~50%</div>
+        <div class="delta">Q3 2025 — credit cards (19%), overdrafts (16%), leasing/HP (12%)</div>
+      </div>
+      <div class="card stat">
+        <div class="label">Onboarding speed advantage</div>
+        <div class="value">120s vs 45min</div>
+        <div class="delta">Neobank account opening vs high-street bank</div>
+      </div>
+      <div class="card stat">
+        <div class="label">Neobank revenue from business accounts</div>
+        <div class="value">67%</div>
+        <div class="delta">2025 — business banking is the neobank profit engine, not consumer</div>
+      </div>
+      <div class="card stat">
+        <div class="label">Western European SMEs using embedded finance</div>
+        <div class="value">46%</div>
+        <div class="delta">Lending, invoicing, payroll bundled into the banking app</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- RECENT TRENDS -->
+  <section id="trends">
+    <div class="section-head"><span class="section-num">02</span><h2>Recent trends shaping the category</h2></div>
+    <p class="section-sub">Six shifts a challenger selling accounts + credit needs to be building against right now.</p>
+    <div class="grid grid-3">
+      <div class="card factor-card">
+        <h4>Embedded finance becomes the default</h4>
+        <p>Banking, invoicing, payroll, and lending are converging into one app. Standalone "just a current account"
+        offers are commoditised; the account is increasingly the distribution channel for credit, not the product itself.</p>
+      </div>
+      <div class="card factor-card">
+        <h4>Neobanks pivot from growth to profitability</h4>
+        <p>After a decade of subsidised free banking, challengers are monetising via paid tiers, FX, and lending margin.
+        Expect fee-tier proliferation and financing products becoming the primary profit line.</p>
+      </div>
+      <div class="card factor-card">
+        <h4>AI-led personalisation and underwriting</h4>
+        <p>Open-banking-fed cash-flow data is used for real-time, pre-approved lending offers and AI bookkeeping/expense
+        categorisation — reducing underwriting friction that historically excluded thin-file SMEs.</p>
+      </div>
+      <div class="card factor-card">
+        <h4>Regulatory convergence narrows the trust gap</h4>
+        <p>Revolut's UK banking licence (Mar 2026) and rising FSCS-protected e-money structures mean "which licence do
+        you hold" is fading as a differentiator — trust competition shifts to brand and track record.</p>
+      </div>
+      <div class="card factor-card">
+        <h4>Open banking scale unlocks better credit decisions</h4>
+        <p>UK open banking passed 12M users (Dec 2024, +50% YoY). Real-time transaction data lets lenders like Tide's
+        marketplace pre-qualify SMEs instantly instead of relying on stale credit-bureau files.</p>
+      </div>
+      <div class="card factor-card">
+        <h4>Access-to-finance gap persists for specific groups</h4>
+        <p>Female-led, ethnic-minority-led, and rural/coastal businesses report materially harder access to finance
+        despite strong growth ambition — a targeted-product and trust-building opportunity, not just a risk to manage.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPETITOR ANALYSIS -->
+  <section id="competitors">
+    <div class="section-head"><span class="section-num">03</span><h2>Competitor analysis</h2></div>
+    <p class="section-sub">The core UK challenger set Tide competes with for both the account and the attached
+      financing wallet share, plus the high-street incumbents still holding the largest single share of primary
+      banking relationships.</p>
+
+    <div class="card" style="margin-bottom:16px;">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Provider</th><th>Licence / protection</th><th>Core account pricing</th><th>Financing / credit offer</th><th>Accounting &amp; ops tools</th><th>Primary target</th><th>Standout angle</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Tide</td><td>E-money (FCA); FSCS on e-money safeguarding partner</td><td>Free tier + paid plans</td><td>Loans to £20m via open-banking marketplace, invoice finance to 90–95% of value, cards</td><td>Invoicing, expense mgmt, accounting integrations, payroll, insurance</td><td>Sole traders → scaling SMEs</td><td>Financing marketplace embedded directly in the account</td></tr>
+            <tr><td>Starling Bank</td><td>Full UK bank; FSCS protected</td><td>Free, fee-free everyday banking</td><td>Overdrafts, limited direct lending; more conservative credit stance</td><td>Solid native toolkit, Xero/QuickBooks</td><td>UK-only SMEs wanting a "real bank"</td><td>Bank-grade trust with neobank UX</td></tr>
+            <tr><td>Revolut Business</td><td>UK banking licence (Mar 2026); FSCS to £120,000</td><td>Free–Enterprise tiers</td><td>Growing lending/credit line features; multi-currency credit tools</td><td>Multi-currency, cards, expense mgmt, APIs</td><td>International traders, scale-ups</td><td>Multi-currency + FX depth</td></tr>
+            <tr><td>Mettle (NatWest)</td><td>E-money, backed by NatWest Group</td><td>Free</td><td>Limited native credit; leans on NatWest referral</td><td>Free FreeAgent accounting with monthly use</td><td>Sole traders, micro-businesses</td><td>Big-bank backing with zero fees</td></tr>
+            <tr><td>ANNA Money</td><td>E-money (FCA)</td><td>Free + paid tiers</td><td>Limited direct lending; invoicing-led</td><td>Auto invoicing, VAT calc, AI receipt scanning</td><td>Freelancers, micro-businesses</td><td>Automation-first, playful brand</td></tr>
+            <tr><td>Cashplus Bank</td><td>Full UK bank</td><td>Paid plans</td><td>Direct lending incl. to credit-impaired SMEs</td><td>Basic</td><td>Businesses underserved by high-street credit</td><td>Credit access for higher-risk profiles</td></tr>
+            <tr><td>Barclays / HSBC / NatWest (high street)</td><td>Full UK bank; FSCS protected</td><td>Often paid after intro period</td><td>Broadest secured lending, relationship managers, overdrafts</td><td>Improving but slower digital tooling</td><td>Established, larger, or asset-heavy SMEs</td><td>Relationship banking, largest balance-sheet lending</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="legend"><span class="item"><span class="swatch" style="background:var(--s1);"></span>Challenger platforms (account + embedded financing marketplace positioning)</span></div>
+      <div class="scatter-wrap" id="scatter">
+        <span class="scatter-axis-label" style="bottom:6px; right:10px;">More feature depth / embedded finance →</span>
+        <span class="scatter-axis-label" style="top:6px; left:10px; writing-mode:vertical-rl;">↑ Perceived trust / balance-sheet strength</span>
+      </div>
+      <div class="barchart caption">Illustrative positioning synthesised from licence type, disclosed lending scope, and product breadth — not a market-research-firm perceptual map.</div>
+    </div>
+  </section>
+
+  <!-- TARGET GROUP ANALYSIS -->
+  <section id="segments">
+    <div class="section-head"><span class="section-num">04</span><h2>Target group analysis</h2></div>
+    <p class="section-sub">Who the buyer actually is, split by legal structure, and the three personas that matter
+      most for an account-plus-financing proposition.</p>
+
+    <div class="grid grid-2" style="margin-bottom:16px;">
+      <div class="card">
+        <div class="legend">
+          <span class="item"><span class="swatch" style="background:var(--s1);"></span>Sole traders</span>
+          <span class="item"><span class="swatch" style="background:var(--s2);"></span>Limited companies</span>
+          <span class="item"><span class="swatch" style="background:var(--s7);"></span>Partnerships</span>
+        </div>
+        <div class="barchart">
+          <div class="row"><div class="rlabel">Sole traders</div><div class="track"><div class="fill" style="width:57%; background:var(--s1);"></div></div><div class="rval">57% · 3.2M</div></div>
+          <div class="row"><div class="rlabel">Limited companies</div><div class="track"><div class="fill" style="width:37%; background:var(--s2);"></div></div><div class="rval">37% · 2.1M</div></div>
+          <div class="row"><div class="rlabel">Partnerships</div><div class="track"><div class="fill" style="width:6%; background:var(--s7);"></div></div><div class="rval">6% · 0.37M</div></div>
+        </div>
+        <div class="caption">Share of ~5.7M UK private-sector businesses by legal structure, start of 2025.</div>
+      </div>
+
+      <div class="card">
+        <h4 style="margin-top:0;">Formation velocity</h4>
+        <p style="font-size:13px; color:var(--text-secondary);">Companies House registered <b>900K+ new limited
+          companies</b> in the twelve months to March 2026 — roughly one every 35 seconds. Meanwhile 46% of UK adults
+          report a side hustle in 2026, feeding a steady stream of new sole-trader signups. This is the top-of-funnel
+          Tide-like platforms are built to capture at the point of formation, before an incumbent bank does.</p>
+        <p style="font-size:13px; color:var(--text-secondary); margin-bottom:0;">Implication: the sole-trader→limited
+          company transition is a natural upsell moment for financing products, since incorporation is usually paired
+          with a first serious look at credit, payroll and investment.</p>
+      </div>
+    </div>
+
+    <div class="grid grid-3">
+      <div class="card persona">
+        <span class="tag">Persona A</span>
+        <h3>The solo operator</h3>
+        <div class="share">Sole trader / freelancer</div>
+        <ul>
+          <li>Wants: fast setup, low/no fees, simple invoicing, tax-time confidence</li>
+          <li>Credit need: occasional short-term cash-flow smoothing, not growth capital</li>
+          <li>Decision style: fast, self-serve, price- and review-sensitive</li>
+        </ul>
+      </div>
+      <div class="card persona">
+        <span class="tag">Persona B</span>
+        <h3>The scaling limited company</h3>
+        <div class="share">2–50 employees</div>
+        <ul>
+          <li>Wants: multi-user access, payroll/expense controls, accountant integration</li>
+          <li>Credit need: working capital, invoice finance, asset finance for growth</li>
+          <li>Decision style: compares 2–3 providers; weighs trust and credit access heavily</li>
+        </ul>
+      </div>
+      <div class="card persona">
+        <span class="tag">Persona C</span>
+        <h3>The underserved growth business</h3>
+        <div class="share">Female-led, ethnic-minority-led, rural/coastal, thin-file</div>
+        <ul>
+          <li>Wants: a lender that will actually say yes, transparent criteria</li>
+          <li>Credit need: growth capital that incumbent banks decline or underprice</li>
+          <li>Decision style: trust- and word-of-mouth driven; loyal once earned</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- PURCHASING FACTORS -->
+  <section id="factors">
+    <div class="section-head"><span class="section-num">05</span><h2>Purchasing factors</h2></div>
+    <p class="section-sub">What actually moves an SME to open, or switch, a business account — ranked by relative
+      influence on the decision. Synthesised from 2025 small-business banking satisfaction and switching studies.</p>
+    <div class="card">
+      <div class="barchart">
+        <div class="row"><div class="rlabel">Trust &amp; reliability</div><div class="track"><div class="fill" style="width:94%; background:var(--s1);"></div></div><div class="rval">Highest</div></div>
+        <div class="row"><div class="rlabel">Fees &amp; cost transparency</div><div class="track"><div class="fill" style="width:86%; background:var(--s1);"></div></div><div class="rval">23% switch on fee rises</div></div>
+        <div class="row"><div class="rlabel">Speed: onboarding &amp; payments</div><div class="track"><div class="fill" style="width:80%; background:var(--s1);"></div></div><div class="rval">54% would switch for faster ACH/payments</div></div>
+        <div class="row"><div class="rlabel">Access to credit / lending</div><div class="track"><div class="fill" style="width:74%; background:var(--s1);"></div></div><div class="rval">Rising — debt/creditworthiness top of mind</div></div>
+        <div class="row"><div class="rlabel">Digital tools &amp; features</div><div class="track"><div class="fill" style="width:68%; background:var(--s1);"></div></div><div class="rval">41% say tech influences switching</div></div>
+        <div class="row"><div class="rlabel">Accounting / invoicing integration</div><div class="track"><div class="fill" style="width:63%; background:var(--s1);"></div></div><div class="rval">50% would switch for free digital invoicing</div></div>
+        <div class="row"><div class="rlabel">Human support when it matters</div><div class="track"><div class="fill" style="width:58%; background:var(--s1);"></div></div><div class="rval">Still decisive at renewal/complaint moments</div></div>
+        <div class="row"><div class="rlabel">Separating personal/business finances</div><div class="track"><div class="fill" style="width:52%; background:var(--s1);"></div></div><div class="rval">28% of switches are triggered by this alone</div></div>
+      </div>
+      <div class="caption">Bars show relative influence on the account decision (illustrative index, not a single
+        study's raw scale). Right-hand annotations are the underlying data points they're drawn from.</div>
+    </div>
+  </section>
+
+  <!-- BUYING MENTALITY -->
+  <section id="mentality">
+    <div class="section-head"><span class="section-num">06</span><h2>Buying mentality &amp; psychology</h2></div>
+    <p class="section-sub">Business banking is bought with the head but held onto — or abandoned — with the gut.
+      These are the psychological forces that determine loyalty and willingness to borrow.</p>
+    <div class="grid grid-2">
+      <div class="card">
+        <h4 style="margin-top:0;">Functional parity forces an emotional decision</h4>
+        <p style="font-size:13.5px; color:var(--text-secondary);">Once an account can move money reliably, feature
+        checklists converge across providers. At that point trust, transparency and perceived independence from
+        "big-bank" incentives become the deciding factor — not the next feature shipped. Digital capability behaves
+        as a <i>threshold</i> requirement (you're disqualified without it) rather than a differentiator.</p>
+        <p class="quote">"Only 17% named digital tools their most-valued attribute, yet 41% say technology would
+        influence a decision to switch." — table stakes, not the reason to stay.</p>
+      </div>
+      <div class="card">
+        <h4 style="margin-top:0;">Fintechs start every relationship with a trust deficit</h4>
+        <p style="font-size:13.5px; color:var(--text-secondary);">No branch, no long institutional history, and
+        (for e-money firms) a licence structure most owners don't fully understand. That deficit is closed with
+        transparency, responsiveness, and visible proof of reliability (uptime, FSCS-equivalent safeguarding,
+        reviews) — not with more app features.</p>
+      </div>
+      <div class="card">
+        <h4 style="margin-top:0;">Borrowing is emotionally loaded, not a spreadsheet exercise</h4>
+        <p style="font-size:13.5px; color:var(--text-secondary);">Small-business finance is personal: fear of
+        rejection, pride in self-sufficiency, and shame around debt all suppress applications even when credit would
+        help the business. Only ~35% of small-business owners rate their own credit as excellent, and debt-management
+        anxiety is rising even as satisfaction improves — credit products need to be framed as low-risk, reversible,
+        and judgement-free to overcome avoidance.</p>
+      </div>
+      <div class="card">
+        <h4 style="margin-top:0;">The "yes" is remembered longer than the rate</h4>
+        <p style="font-size:13.5px; color:var(--text-secondary);">For historically declined or underpriced segments
+        (female-led, ethnic-minority-led, rural/coastal, thin-file businesses), simply being approved — clearly and
+        respectfully — builds outsized loyalty. Price competitiveness matters less than being taken seriously as a
+        credit risk in the first place.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FINANCING / CREDIT DEEP DIVE -->
+  <section id="credit">
+    <div class="section-head"><span class="section-num">07</span><h2>Financing &amp; credit deep-dive</h2></div>
+    <p class="section-sub">The lending side of the proposition — how SMEs currently source external finance, and
+      where the structural gaps sit.</p>
+
+    <div class="grid grid-2" style="margin-bottom:16px;">
+      <div class="card">
+        <div class="barchart">
+          <div class="row"><div class="rlabel">Credit cards</div><div class="track"><div class="fill" style="width:38%; background:var(--s1);"></div></div><div class="rval">19%</div></div>
+          <div class="row"><div class="rlabel">Overdrafts</div><div class="track"><div class="fill" style="width:32%; background:var(--s1);"></div></div><div class="rval">16%</div></div>
+          <div class="row"><div class="rlabel">Leasing / hire purchase</div><div class="track"><div class="fill" style="width:24%; background:var(--s1);"></div></div><div class="rval">12%</div></div>
+          <div class="row"><div class="rlabel">Other (loans, invoice finance, grants)</div><div class="track"><div class="fill" style="width:18%; background:var(--s1);"></div></div><div class="rval">~9% combined</div></div>
+        </div>
+        <div class="caption">Most-used external finance types among UK SMEs, Q3 2025 (~50% of SMEs used any external
+          finance in the quarter).</div>
+      </div>
+      <div class="card">
+        <h4 style="margin-top:0;">Where the market is heading</h4>
+        <ul style="font-size:13.5px; color:var(--text-secondary); padding-left:18px; margin:0;">
+          <li>Gross SME bank lending: <b>£68bn in 2025, +9% YoY</b> — second-highest in 13 years.</li>
+          <li><b>60%</b> of that lending now comes from challenger and specialist lenders, not the traditional big five.</li>
+          <li><b>62%</b> of SMEs say they know where to find financing information (+5pp YoY) — awareness is improving
+            faster than actual approval experience.</li>
+          <li>Underserved cohorts (female-led, ethnic-minority-led, rural/coastal) report materially harder access
+            despite strong growth ambition — a clear white-space for a fairer, open-banking-based underwriting model.</li>
+          <li>Invoice finance and open-banking-driven pre-qualified loans (Tide's model: connect the account, get an
+            instant eligibility read) are displacing paperwork-heavy applications.</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <h4 style="margin-top:0;">Why bundling the account with credit works commercially</h4>
+      <p style="font-size:13.5px; color:var(--text-secondary); margin-bottom:0;">The current account gives the
+      platform first-party transaction data — the single best underwriting signal for a thin-file small business.
+      That turns the account from a low-margin utility into a distribution engine for higher-margin financing
+      products, which is also why neobanks now draw <b>67% of revenue from business accounts</b> and are pushing
+      hard into embedded lending rather than competing purely on account fees.</p>
+    </div>
+  </section>
+
+  <!-- STRATEGIC IMPLICATIONS -->
+  <section id="implications">
+    <div class="section-head"><span class="section-num">08</span><h2>Strategic implications for a Tide-like platform</h2></div>
+    <p class="section-sub">What this research points to for go-to-market and product priorities.</p>
+    <div class="card">
+      <ol class="reco">
+        <li><b>Lead acquisition with speed, land monetisation with credit.</b> Keep account opening near-instant
+          (the 120-second neobank advantage) to win the trust-building "first yes," then use transaction data to
+          make a pre-qualified financing offer within the first weeks of activity — before the SME goes looking
+          elsewhere for a loan.</li>
+        <li><b>Sell trust, not features, once parity is reached.</b> Feature checklists no longer differentiate;
+          invest messaging in transparency (safeguarding, FSCS-equivalent protection, plain-English fees) and proof
+          of reliability rather than another app feature launch.</li>
+        <li><b>Design credit products to defuse borrowing anxiety.</b> Frame financing as low-commitment and
+          reversible (soft eligibility checks with no credit-score impact, clear declines with next steps) — this
+          directly targets the shame/fear dynamic suppressing applications from creditworthy owners.</li>
+        <li><b>Target the incorporation moment.</b> With 900K+ new limited companies formed a year, integrate with
+          company-formation flows to capture SMEs before their first "real" bank relationship forms.</li>
+        <li><b>Build explicitly for underserved segments.</b> Female-led, ethnic-minority-led and rural/coastal SMEs
+          are underserved by incumbents and disproportionately loyal once approved fairly — a defensible, high-LTV
+          niche competitors are not fully contesting.</li>
+        <li><b>Treat the account as underwriting infrastructure, not the product.</b> The commercial logic across the
+          category (67% of neobank revenue from business accounts, rising embedded-finance adoption) confirms the
+          account's job is to generate the cash-flow data that makes the credit decision — price and design it
+          accordingly.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="sources">
+    <div class="section-head"><span class="section-num">09</span><h2>Sources</h2></div>
+    <div class="card sources">
+      <ul>
+        <li><a href="https://www.british-business-bank.co.uk/about/research-and-publications/small-business-finance-markets-report-2026" target="_blank" rel="noopener">British Business Bank — Small Business Finance Markets Report 2026</a></li>
+        <li><a href="https://www.creditstrategy.co.uk/knowledge-hub/uk-business-bank-lending-increased-by-9-in-2025" target="_blank" rel="noopener">Credit Strategy — UK business bank lending increased 9% in 2025</a></li>
+        <li><a href="https://www.ukfinance.org.uk/news-and-insight/press-release/sme-lending-increases-second-consecutive-year" target="_blank" rel="noopener">UK Finance — SME lending increases for second consecutive year</a></li>
+        <li><a href="https://www.jdpower.com/business/press-releases/2025-us-small-business-banking-satisfaction-study" target="_blank" rel="noopener">J.D. Power — 2025 Small Business Banking Satisfaction Study</a></li>
+        <li><a href="https://www.bluevine.com/blog/guide-to-switching-business-bank-accounts" target="_blank" rel="noopener">Bluevine — Guide to Switching Business Bank Accounts</a></li>
+        <li><a href="https://rfi.global/the-future-of-business-banking-five-global-trends-that-will-define-2026/" target="_blank" rel="noopener">RFI Global — The future of business banking: five trends for 2026</a></li>
+        <li><a href="https://www.tapix.io/resources/post/sme-digital-banking-trends" target="_blank" rel="noopener">Tapix — Top 5 SME Banking Trends Shaping Digital Services in 2026</a></li>
+        <li><a href="https://techrt.com/neobank-adoption-statistics/" target="_blank" rel="noopener">TechRT — Neobank Adoption Statistics 2026</a></li>
+        <li><a href="https://www.zymr.com/blog/neobanking-for-smes-b2b-digital-banking" target="_blank" rel="noopener">Zymr — Neobanking for SMEs: the $100B opportunity</a></li>
+        <li><a href="https://www.tide.co/business-loans/" target="_blank" rel="noopener">Tide Business — Small Business Loans</a></li>
+        <li><a href="https://www.tide.co/business-loans/invoice-finance/" target="_blank" rel="noopener">Tide Business — Invoice Finance</a></li>
+        <li><a href="https://www.tide.co/blog/tide-update/tide-now-supports-over-1-5-million-small-businesses-globally/" target="_blank" rel="noopener">Tide Business — 1.5 million members globally</a></li>
+        <li><a href="https://ffnews.com/newsarticle/fintech/tide-1-5-million-members-growth/" target="_blank" rel="noopener">FF News — Tide 1.5 Million Members Milestone</a></li>
+        <li><a href="https://tracxn.com/d/companies/tide/__-iodg6wQzO-J1zXdyyIGbC7ghptVvUxsCpenj247epM" target="_blank" rel="noopener">Tracxn — Tide company profile</a></li>
+        <li><a href="https://anna.money/blog/guides/starling-vs-tide-vs-revolut-business-account/" target="_blank" rel="noopener">ANNA Money — Starling vs Tide vs Revolut Business (2026)</a></li>
+        <li><a href="https://www.businessexpert.co.uk/business-banking/tide-vs-starling/" target="_blank" rel="noopener">Business Expert — Tide vs Starling Business Account 2026</a></li>
+        <li><a href="https://startups.co.uk/analysis/small-business-statistics/" target="_blank" rel="noopener">Startups.co.uk — 47 UK Small Business Statistics 2026</a></li>
+        <li><a href="https://www.money.co.uk/business/business-statistics" target="_blank" rel="noopener">money.co.uk — UK business statistics 2026</a></li>
+        <li><a href="https://www.limitedcompanyhelp.com/how-many-limited-companies-uk/" target="_blank" rel="noopener">Limited Company Help — How many limited companies in the UK?</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    Research synthesis for planning purposes — figures are drawn from public disclosures and third-party market
+    surveys current as of mid-2026 and should be re-validated against primary sources before use in external
+    materials or investment decisions.
+  </footer>
+
+</div>
+
+<script>
+  // Competitor positioning scatter (feature depth / embedded finance × perceived trust)
+  var points = [
+    {name:"Tide", sub:"challenger + marketplace", x:82, y:58},
+    {name:"Starling", sub:"full bank", x:55, y:80},
+    {name:"Revolut Business", sub:"multi-currency", x:88, y:64},
+    {name:"Mettle", sub:"NatWest-backed", x:40, y:70},
+    {name:"ANNA Money", sub:"automation-led", x:60, y:42},
+    {name:"Cashplus", sub:"full bank", x:50, y:55},
+    {name:"High-street banks", sub:"Barclays/HSBC/NatWest", x:35, y:92}
+  ];
+  var el = document.getElementById('scatter');
+  points.forEach(function(p){
+    var dot = document.createElement('div');
+    dot.className = 'dot';
+    dot.style.left = p.x + '%';
+    dot.style.top = (100 - p.y) + '%';
+    dot.title = p.name + ' — ' + p.sub;
+    el.appendChild(dot);
+
+    var label = document.createElement('div');
+    label.className = 'dot-label';
+    label.style.left = (p.x + 2) + '%';
+    label.style.top = (100 - p.y - 4) + '%';
+    label.innerHTML = p.name + ' <small>' + p.sub + '</small>';
+    el.appendChild(label);
+  });
+</script>
+</body>
+</html>
